@@ -14,12 +14,16 @@ class main_window : public vsite::nwp::window
 
 protected:
 	void on_left_button_down(POINT p) override { 
-		// TODO: create ship if it doesn't exist yet
+		// Create ship if it doesn't exist yet.
 		if (!shipIsCreated) {
 			myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);
+			shipIsCreated = true;
 		}
-		shipIsCreated = true;
-		// TODO: change current location
+		// Change current location.
+		else {
+			HWND hw = myShip.operator HWND();
+			::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+		}
 	}
 	void on_key_up(int vk) override {
 		// TODO: mark ship (if exists) as "not moving"
