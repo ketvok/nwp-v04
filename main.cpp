@@ -11,39 +11,71 @@ class main_window : public vsite::nwp::window
 {
 	ship myShip;
 	static bool shipIsCreated;
+	bool ctrlPressed = false;
+	bool isMoving = false;
 
 protected:
 	void on_left_button_down(POINT p) override { 
 		// Create ship if it doesn't exist yet.
-		RECT windowSize{};
-		::GetClientRect(*this, &windowSize);
+		RECT windowSize{};  // Struktura left, right, top, bottom.
+		::GetClientRect(*this, &windowSize);  // Dohvati left, right, top i bottom koordinate klijentskog dijela prozora; gornji lijevi kut je (0, 0).
 
-		if (!shipIsCreated) {
+		if (!shipIsCreated) {  // Ako ship ne postoji....
 			if (p.x - 10 >= windowSize.left &&
 				p.y - 10 >= windowSize.top &&
 				p.x + 10 <= windowSize.right &&
 				p.y + 10 <= windowSize.bottom) {
-				myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);
-				shipIsCreated = true;
+				myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);  // Stvori ga na željenoj poziciji.
+				shipIsCreated = true;  // Postavi flag da brod postoji.
 			}
 		}
 		// Change current location.
-		else {
+		else {  // Ako ship veæ postoji...
 			HWND hw = myShip.operator HWND();
 			if (p.x - 10 >= windowSize.left &&
 				p.y - 10 >= windowSize.top &&
 				p.x + 10 <= windowSize.right &&
 				p.y + 10 <= windowSize.bottom) {
-				::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+				::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Postavi ga na novu poziciju.
 			}
 		}
 	}
 	void on_key_up(int vk) override {
+		if (vk == VK_CONTROL) {
+			ctrlPressed = false;
+		}
 		// TODO: mark ship (if exists) as "not moving"
+		else if (vk >= VK_LEFT && vk <= VK_DOWN) {  // Ako je podignuta neka od strelica...
+			isMoving = false;  // Brod se više ne mièe.
+		}
 	}
 	void on_key_down(int vk) override {
+		if (vk == VK_CONTROL) {
+			ctrlPressed = true;
+		}
 		// TODO: if ship exists, move it depending on key and mark as "moving"
+		if (shipIsCreated) {
+			if (vk >= VK_LEFT && vk <= VK_DOWN) {
+				isMoving = true;
+				int moveDistance = ctrlPressed ? 4 : 2;
+				switch (vk) {
+				case VK_LEFT:
+					//moveShip(-moveDistance, 0);
+					break;
+				case VK_RIGHT:
+					//moveShip(moveDistance, 0);
+					break;
+				case VK_UP:
+					//moveShip(0, -moveDistance);
+					break;
+				case VK_DOWN:
+					//moveShip(0, moveDistance);
+					break;
+				}
+			}
+		}
 	}
+
 	void on_destroy() override {
 		::PostQuitMessage(0);
 	}
