@@ -15,14 +15,27 @@ class main_window : public vsite::nwp::window
 protected:
 	void on_left_button_down(POINT p) override { 
 		// Create ship if it doesn't exist yet.
+		RECT windowSize{};
+		::GetClientRect(*this, &windowSize);
+
 		if (!shipIsCreated) {
-			myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);
-			shipIsCreated = true;
+			if (p.x - 10 >= windowSize.left &&
+				p.y - 10 >= windowSize.top &&
+				p.x + 10 <= windowSize.right &&
+				p.y + 10 <= windowSize.bottom) {
+				myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);
+				shipIsCreated = true;
+			}
 		}
 		// Change current location.
 		else {
 			HWND hw = myShip.operator HWND();
-			::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+			if (p.x - 10 >= windowSize.left &&
+				p.y - 10 >= windowSize.top &&
+				p.x + 10 <= windowSize.right &&
+				p.y + 10 <= windowSize.bottom) {
+				::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+			}
 		}
 	}
 	void on_key_up(int vk) override {
