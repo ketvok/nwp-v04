@@ -34,10 +34,9 @@ protected:
 				myShip.getCoordinates().x + x + 20 <= windowSize.right &&
 				myShip.getCoordinates().y + y >= windowSize.top &&
 				myShip.getCoordinates().y + y + 20 <= windowSize.bottom) {
-				HWND hw = myShip.operator HWND();
-				::SetWindowLongPtr(hw, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE | WS_BORDER);
-				::SetWindowPos(hw, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
-				::SetWindowPos(hw, 0, myShip.getCoordinates().x + x, myShip.getCoordinates().y + y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+				::SetWindowLongPtr(myShip, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE | WS_BORDER);  // Conversion operator converts ship to HWND.
+				::SetWindowPos(myShip, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
+				::SetWindowPos(myShip, 0, myShip.getCoordinates().x + x, myShip.getCoordinates().y + y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 				POINT np{ myShip.getCoordinates().x + x, myShip.getCoordinates().y + y };
 				myShip.setCoordinates(np);
 			}
@@ -60,12 +59,11 @@ protected:
 		}
 		// Change current location.
 		else {  // If ship already exists...
-			HWND hw = myShip.operator HWND();
 			if (p.x - 10 >= windowSize.left &&
 				p.y - 10 >= windowSize.top &&
 				p.x + 10 <= windowSize.right &&
 				p.y + 10 <= windowSize.bottom) {
-				::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Place it at the new position.
+				::SetWindowPos(myShip, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Place it at the new position. Conversion operator converts ship to HWND.
 			}
 		}
 		POINT nc{ p.x - 10, p.y - 10 };
@@ -79,9 +77,8 @@ protected:
 		else if (vk >= VK_LEFT && vk <= VK_DOWN) {  // If arrow is lifted...
 			isMoving = false;  // Ship is no longer moving.
 			// Remove border of the ship that is no longer moving.
-			HWND hw = myShip.operator HWND();
-			::SetWindowLongPtr(hw, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE);
-			::SetWindowPos(hw, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
+			::SetWindowLongPtr(myShip, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE);  // Conversion operator converts ship to HWND.
+			::SetWindowPos(myShip, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
 		}
 	}
 	void on_key_down(int vk) override {
