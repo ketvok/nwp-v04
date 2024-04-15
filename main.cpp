@@ -1,6 +1,6 @@
 #include "nwpwin.h"
 
-// TODO: prepare class ("STATIC") for a ship
+// Prepare class ("STATIC") for a ship.
 class ship : public vsite::nwp::window {
 	std::string class_name() override {
 		return "STATIC";
@@ -12,7 +12,7 @@ public:
 		p.x = pr.x;
 		p.y = pr.y;
 	}
-	POINT& getCoordinates() {
+	const POINT& getCoordinates() {
 		return p;
 	}
 };
@@ -35,7 +35,9 @@ protected:
 				myShip.getCoordinates().y + y >= windowSize.top &&
 				myShip.getCoordinates().y + y + 20 <= windowSize.bottom) {
 				HWND hw = myShip.operator HWND();
-				::SetWindowPos(hw, 0, myShip.getCoordinates().x + x, myShip.getCoordinates().y + y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+				::SetWindowLongPtr(hw, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE | WS_BORDER);
+				::SetWindowPos(hw, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
+				::SetWindowPos(hw, 0, myShip.getCoordinates().x + x, myShip.getCoordinates().y + y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 				POINT np{ myShip.getCoordinates().x + x, myShip.getCoordinates().y + y };
 				myShip.setCoordinates(np);
 			}
@@ -44,26 +46,26 @@ protected:
 
 	void on_left_button_down(POINT p) override { 
 		// Create ship if it doesn't exist yet.
-		RECT windowSize{};  // Struktura left, right, top, bottom.
-		::GetClientRect(*this, &windowSize);  // Dohvati left, right, top i bottom koordinate klijentskog dijela prozora; gornji lijevi kut je (0, 0).
+		RECT windowSize{};  // Structure left, right, top, bottom.
+		::GetClientRect(*this, &windowSize);  // Fetch left, right, top and bottom coordinates of client part of window; upper left corner is (0, 0).
 
-		if (!shipIsCreated) {  // Ako ship ne postoji....
+		if (!shipIsCreated) {  // If ship does not exist....
 			if (p.x - 10 >= windowSize.left &&
 				p.y - 10 >= windowSize.top &&
 				p.x + 10 <= windowSize.right &&
 				p.y + 10 <= windowSize.bottom) {
-				myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);  // Stvori ga na željenoj poziciji.
-				shipIsCreated = true;  // Postavi flag da brod postoji.
+				myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);  // Create it at the desired position.
+				shipIsCreated = true;  // Set flag that ship exists.
 			}
 		}
 		// Change current location.
-		else {  // Ako ship veæ postoji...
+		else {  // If ship already exists...
 			HWND hw = myShip.operator HWND();
 			if (p.x - 10 >= windowSize.left &&
 				p.y - 10 >= windowSize.top &&
 				p.x + 10 <= windowSize.right &&
 				p.y + 10 <= windowSize.bottom) {
-				::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Postavi ga na novu poziciju.
+				::SetWindowPos(hw, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Place it at the new position.
 			}
 		}
 		POINT nc{ p.x - 10, p.y - 10 };
@@ -73,20 +75,25 @@ protected:
 		if (vk == VK_CONTROL) {
 			ctrlPressed = false;
 		}
-		// TODO: mark ship (if exists) as "not moving"
-		else if (vk >= VK_LEFT && vk <= VK_DOWN) {  // Ako je podignuta neka od strelica...
-			isMoving = false;  // Brod se više ne mièe.
+		// Mark ship (if exists) as "not moving".
+		else if (vk >= VK_LEFT && vk <= VK_DOWN) {  // If arrow is lifted...
+			isMoving = false;  // Ship is no longer moving.
+			// Remove border of the ship that is no longer moving.
+			HWND hw = myShip.operator HWND();
+			::SetWindowLongPtr(hw, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE);
+			::SetWindowPos(hw, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
 		}
 	}
 	void on_key_down(int vk) override {
 		if (vk == VK_CONTROL) {
 			ctrlPressed = true;
 		}
-		// TODO: if ship exists, move it depending on key and mark as "moving"
+		// If ship exists, move it depending on key and mark as "moving".
 		if (shipIsCreated) {
 			if (vk >= VK_LEFT && vk <= VK_DOWN) {
 				isMoving = true;
 				int moveDistance = ctrlPressed ? 4 : 2;
+				
 				switch (vk) {
 				case VK_LEFT:
 					moveShip(-moveDistance, 0);
