@@ -21,7 +21,6 @@ class main_window : public vsite::nwp::window
 {
 	ship myShip;
 	static bool shipIsCreated;
-	bool ctrlPressed = false;
 	bool isMoving = false;
 
 protected:
@@ -66,15 +65,12 @@ protected:
 				::SetWindowPos(myShip, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Place it at the new position. Conversion operator converts ship to HWND.
 			}
 		}
-		POINT nc{ p.x - 10, p.y - 10 };
+		POINT nc{ p.x - 10, p.y - 10 };  // Corrected coordinates.
 		myShip.setCoordinates(nc);
 	}
 	void on_key_up(int vk) override {
-		if (vk == VK_CONTROL) {
-			ctrlPressed = false;
-		}
 		// Mark ship (if exists) as "not moving".
-		else if (vk >= VK_LEFT && vk <= VK_DOWN) {  // If arrow is lifted...
+		if (vk >= VK_LEFT && vk <= VK_DOWN) {  // If arrow is lifted...
 			isMoving = false;  // Ship is no longer moving.
 			// Remove border of the ship that is no longer moving.
 			::SetWindowLongPtr(myShip, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE);  // Conversion operator converts ship to HWND.
@@ -82,14 +78,11 @@ protected:
 		}
 	}
 	void on_key_down(int vk) override {
-		if (vk == VK_CONTROL) {
-			ctrlPressed = true;
-		}
 		// If ship exists, move it depending on key and mark as "moving".
 		if (shipIsCreated) {
 			if (vk >= VK_LEFT && vk <= VK_DOWN) {
 				isMoving = true;
-				int moveDistance = ctrlPressed ? 4 : 2;
+				int moveDistance = ::GetAsyncKeyState(VK_CONTROL) ? 4 : 2;
 				
 				switch (vk) {
 				case VK_LEFT:
