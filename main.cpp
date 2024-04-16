@@ -17,10 +17,10 @@ public:
 	}
 };
 
+
 class main_window : public vsite::nwp::window
 {
-	ship myShip;
-	static bool shipIsCreated;
+	ship myShip;  //N.B.: Conversion operator converts window(ship) to HWND, initialized to 0!!!
 	bool isMoving = false;
 
 protected:
@@ -28,12 +28,12 @@ protected:
 		RECT windowSize{};
 		::GetClientRect(*this, &windowSize);
 
-		if (shipIsCreated) {
+		if (myShip) {
 			if (myShip.getCoordinates().x + x >= windowSize.left &&
 				myShip.getCoordinates().x + x + 20 <= windowSize.right &&
 				myShip.getCoordinates().y + y >= windowSize.top &&
 				myShip.getCoordinates().y + y + 20 <= windowSize.bottom) {
-				::SetWindowLongPtr(myShip, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE | WS_BORDER);  // Conversion operator converts ship to HWND.
+				::SetWindowLongPtr(myShip, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE | WS_BORDER);
 				::SetWindowPos(myShip, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
 				::SetWindowPos(myShip, 0, myShip.getCoordinates().x + x, myShip.getCoordinates().y + y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 				POINT np{ myShip.getCoordinates().x + x, myShip.getCoordinates().y + y };
@@ -47,13 +47,12 @@ protected:
 		RECT windowSize{};  // Structure left, right, top, bottom.
 		::GetClientRect(*this, &windowSize);  // Fetch left, right, top and bottom coordinates of client part of window; upper left corner is (0, 0).
 
-		if (!shipIsCreated) {  // If ship does not exist....
+		if (!myShip) {  // If ship does not exist....
 			if (p.x - 10 >= windowSize.left &&
 				p.y - 10 >= windowSize.top &&
 				p.x + 10 <= windowSize.right &&
 				p.y + 10 <= windowSize.bottom) {
 				myShip.create(*this, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, "x", 0, p.x - 10, p.y - 10, 20, 20);  // Create it at the desired position.
-				shipIsCreated = true;  // Set flag that ship exists.
 			}
 		}
 		// Change current location.
@@ -62,7 +61,7 @@ protected:
 				p.y - 10 >= windowSize.top &&
 				p.x + 10 <= windowSize.right &&
 				p.y + 10 <= windowSize.bottom) {
-				::SetWindowPos(myShip, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Place it at the new position. Conversion operator converts ship to HWND.
+				::SetWindowPos(myShip, 0, p.x - 10, p.y - 10, 0, 0, SWP_NOSIZE | SWP_NOZORDER);  // Place it at the new position.
 			}
 		}
 		POINT nc{ p.x - 10, p.y - 10 };  // Corrected coordinates.
@@ -73,13 +72,13 @@ protected:
 		if (vk >= VK_LEFT && vk <= VK_DOWN) {  // If arrow is lifted...
 			isMoving = false;  // Ship is no longer moving.
 			// Remove border of the ship that is no longer moving.
-			::SetWindowLongPtr(myShip, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE);  // Conversion operator converts ship to HWND.
+			::SetWindowLongPtr(myShip, GWL_STYLE, WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE);
 			::SetWindowPos(myShip, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOMOVE);
 		}
 	}
 	void on_key_down(int vk) override {
 		// If ship exists, move it depending on key and mark as "moving".
-		if (shipIsCreated) {
+		if (myShip) {
 			if (vk >= VK_LEFT && vk <= VK_DOWN) {
 				isMoving = true;
 				int moveDistance = ::GetAsyncKeyState(VK_CONTROL) ? 4 : 2;
@@ -108,7 +107,6 @@ protected:
 private:
 };
 
-bool main_window::shipIsCreated = false;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hp, LPSTR cmdLine, int nShow)
 {
